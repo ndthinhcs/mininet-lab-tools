@@ -11,15 +11,23 @@ import subprocess
 import argparse as arg
 import concurrent.futures
 
-EXTRACT_PKT_PER_FLOW = 100
-# MAX_STREAM_ID = -1
-CONC_THREAD = 8
+# Load Config
+import tomli
+try:
+    with open('config.toml', "rb") as f:
+        toml_dict = tomli.load(f)
+except tomli.TOMLDecodeError:
+    print("Yep, definitely not valid.")
 
-OVERIDE = False
-HEX_TO_DEC = True
-PCAP_LOC = './pcap/'
-SAVED_LOC = './rawds/'
-TEMP_PART_LOC = './temp_part/'
+EXTRACT_PKT_PER_FLOW = toml_dict['EXTRACT_PKT_PER_FLOW']
+# MAX_STREAM_ID = toml_dict['MAX_STREAM_ID']
+CONC_THREAD = toml_dict['CONC_THREAD']
+
+OVERIDE = toml_dict['OVERIDE']
+HEX_TO_DEC = toml_dict['HEX_TO_DEC']
+PCAP_LOC = toml_dict['PCAP_LOC']
+SAVED_LOC = toml_dict['SAVED_LOC']
+TEMP_PART_LOC = toml_dict['TEMP_PART_LOC']
 
 def ls_subfolders(rootdir):
     sub_folders_n_files = []
@@ -150,7 +158,7 @@ def merge_csv(root_file, temp_file, max_packet_per_flow = EXTRACT_PKT_PER_FLOW):
         print('del: ', temp_file)
     return root_file
 
-if __name__ == '__main__':
+def main():
 
     parser = arg.ArgumentParser()
     # parser.add_argument("counter", help="An integer will be increased by 1 and printed.", type=int)
@@ -248,3 +256,9 @@ if __name__ == '__main__':
             df.to_csv(f'{saved_filename}.csv', index=False)
             del df
         print(f'Finised file {file_path} - Saved file: {saved_filename}.csv, Time taken: {time.time() - start_time}')
+
+if __name__ == '__main__':
+    try:
+        main()
+    except KeyboardInterrupt:
+        print('Ctrl + C')

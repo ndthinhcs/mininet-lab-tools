@@ -1,0 +1,9 @@
+EXTRACT_PKT_PER_FLOW = 100
+# MAX_STREAM_ID = -1
+CONC_THREAD = 8
+
+OVERIDE = true
+HEX_TO_DEC = true
+PCAP_LOC = './pcap/'
+SAVED_LOC = './rawds/'
+TEMP_PART_LOC = './temp_part/'
