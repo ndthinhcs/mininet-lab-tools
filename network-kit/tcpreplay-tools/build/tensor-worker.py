@@ -8,6 +8,15 @@ import tomli
 # import tensorflow as tf
 # from keras.models import load_model
 
+import tomli
+try:
+    with open('config.toml', "rb") as f:
+        toml_dict = tomli.load(f)
+except tomli.TOMLDecodeError:
+    print("Yep, definitely not valid.")
+
+config = toml_dict['tensor-worker']
+
 RABBIT_URL = 'localhost'
 ROUTING_KEY = 'hello2'
 QUEUE_NAME = ROUTING_KEY

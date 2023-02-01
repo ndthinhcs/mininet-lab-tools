@@ -1,27 +1,45 @@
 [packet-capture]
-# cmd = '''tshark -i h1 -Y "gquic.payload" \
-#         -T fields \
-#         -e frame.time_epoch -e ip.src -e udp.srcport -e ip.dst -e udp.dstport -e ip.proto \
-#         -e _ws.col.Info -e qgquic.payload \
-#         -E header=n -E separator=, -E quote=d -E occurrence=f \
-#         -a duration:30'''
+# production:
+# CMD  = '''sudo tshark -i h0-eth1 -Y "udp and gquic.payload" \
+#           -d udp.port==443,gquic \
+#           -T fields -e frame.time_epoch -e ip.src -e udp.srcport -e ip.dst -e udp.dstport \
+#           -e ip.proto -e _ws.col.Info -e gquic.payload \
+#           -E header=n -E separator=, -E quote=d -E occurrence=f
+#        '''
 
-cmd = '''tshark -i ens33 -Y "tcp.payload" \
-         -T fields -e frame.time_epoch -e ip.src -e tcp.srcport -e ip.dst -e tcp.dstport -e ip.proto \
-         -e _ws.col.Info -e tcp.payload \
-         -E header=n -E separator=, -E quote=d -E occurrence=f -a duration:10'''
+# debug only:
+CMD  = '''sudo tshark -i ens33 -Y "udp and gquic.payload" \
+          -d udp.port==443,gquic \
+          -T fields -e frame.time_epoch -e ip.src -e udp.srcport -e ip.dst -e udp.dstport \
+          -e ip.proto -e _ws.col.Info -e gquic.payload \
+          -E header=n -E separator=, -E quote=d -E occurrence=f
+       '''
 
-producer-q = 'packet-capture'
-producer-con = 'localhost'
+# CMD = '''tshark -i ens33 -Y "tcp.payload" \
+#          -T fields -e frame.time_epoch -e ip.src -e tcp.srcport -e ip.dst -e tcp.dstport -e ip.proto \
+#          -e _ws.col.Info -e tcp.payload \
+#          -E header=n -E separator=, -E quote=d -E occurrence=f -a duration:10'''
 
-[packet-decoder]
-consumer-q = 'packet-capture'
-consumer-con = 'localhost'
-producer-q = 'packet-decoder'
-producer-con = 'localhost'
-number-of-packet = 20
+QUEUE_NAME = 'hello'
+ROUTING_KEY = 'hello'
+
+[flow-decoder]
+CONSUMER_QUEUE= 'hello'
+CONSUMER_ROUTING_KEY = 'hello'
+
+PRODUCER_QUEUE = 'hello2'
+PRODUCER_ROUTING_KEY = 'hello2'
+
+# debug result by using mongo
+DEBUG = true
+CONNECTION_STRING = 'mongodb://localhost:27017'
+
+MAX_PACKET_PER_FLOW = 10
 
 [tensor-worker]
-consumer-q = 'packet-decoder'
-consumer-con = 'localhost'
-worker = 4
+RABBIT_URL = 'localhost'
+ROUTING_KEY = 'hello2'
+QUEUE_NAME = 'hello2'
+EXCHANGE = 'events'
+THREADS = 5
+PREFETCH_COUNT = 2

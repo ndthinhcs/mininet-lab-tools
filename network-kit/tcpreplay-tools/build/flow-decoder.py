@@ -1,15 +1,30 @@
 import pika
+import pymongo
+
 import threading, sys, os
 import json, csv
 
 from io import StringIO
 import tomli
 
-CONSUMER_QUEUE= 'hello'
-CONSUMER_ROUTING_KEY = 'hello'
+import tomli
+try:
+    with open('config.toml', "rb") as f:
+        toml_dict = tomli.load(f)
+except tomli.TOMLDecodeError:
+    print("Yep, definitely not valid.")
 
-PRODUCER_QUEUE = 'hello2'
-PRODUCER_ROUTING_KEY = 'hello2'
+config = toml_dict['flow-decoder']
+
+CONSUMER_QUEUE= config['CONSUMER_QUEUE']
+CONSUMER_ROUTING_KEY = config['CONSUMER_ROUTING_KEY']
+
+PRODUCER_QUEUE = config['PRODUCER_QUEUE']
+PRODUCER_ROUTING_KEY = config['PRODUCER_ROUTING_KEY']
+
+# debug result by using mongo
+DEBUG = True
+CONNECTION_STRING = config['CONNECTION_STRING']
 
 MAX_PACKET_PER_FLOW = 10
 
@@ -26,6 +41,17 @@ def main():
     producer_channel = producer_con.channel()
     producer_channel.queue_declare(queue=PRODUCER_QUEUE)
 
+    if DEBUG:
+        # set a 5-second connection timeout    
+        client = pymongo.MongoClient(CONNECTION_STRING, serverSelectionTimeoutMS=5000)
+        try:
+            print(client.server_info())
+            # clear db for new run
+            client['DEV']['flow'].drop()
+        except Exception:
+            print("Unable to connect to the server.")
+            return
+
     flows = {}
 
     def callback(ch, method, properties, body):
@@ -38,13 +64,14 @@ def main():
             message[i] = message[i].strip('"')
         flow_key_1 = f'{message[1]}:{message[2]}-{message[3]}:{message[4]}-{message[5]}'
         flow_key_2 = f'{message[3]}:{message[4]}-{message[1]}:{message[2]}-{message[5]}'
+        data = string_hex_to_int(message[7])
 
         # review this flow_dict
         def add_flow(flow_key):
             flow_dict = {}
             if flow_key in flows and not flows[flow_key]['stop']:
-                flows[flow_key]['data'].append(message[7])
                 flows[flow_key]['info'].append(message[6])
+                flows[flow_key]['data'].append(data)
                 if len(flows[flow_key]['data']) == MAX_PACKET_PER_FLOW:
                     flow_dict[flow_key] = flows[flow_key]
                     producer_channel.basic_publish(exchange='',
@@ -52,6 +79,11 @@ def main():
                         body=json.dumps(flow_dict))
                     print(json.dumps(flow_dict))
                     # print(message[7])
+
+                    if DEBUG:
+                        flow_dict[flow_key] = flows[flow_key]
+                        client['DEV']['flow'].insert_one(flow_dict)
+                        
                     flow_dict = {}
                     flows[flow_key]['data'] = []
                     flows[flow_key]['stop'] = True
@@ -70,7 +102,7 @@ def main():
                 'dst_port': message[4],
                 'ip_proto': message[5],
                 'info': [message[6]],
-                'data': [message[7]]
+                'data': [data]
             }
 
         # print(" [x] Received %r" % body)

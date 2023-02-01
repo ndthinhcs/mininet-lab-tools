@@ -56,7 +56,7 @@ def main():
 
                     client['DEV']['flow'].insert_one(flow_dict)
 
-                    # print(json.dumps(flow_dict))
+                      # print(json.dumps(flow_dict))
                     # print(message[7])
                     flow_dict = {}
                     flows[flow_key]['data'] = []
