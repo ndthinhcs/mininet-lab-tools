@@ -22,9 +22,11 @@ CONSUMER_ROUTING_KEY = config['CONSUMER_ROUTING_KEY']
 PRODUCER_QUEUE = config['PRODUCER_QUEUE']
 PRODUCER_ROUTING_KEY = config['PRODUCER_ROUTING_KEY']
 
-# debug result by using mongo
-DEBUG = True
 CONNECTION_STRING = config['CONNECTION_STRING']
+
+# mode
+USE_MONGODB = config['USE_MONGODB']
+USE_RABBITMQ = config['USE_RABBITMQ']
 
 MAX_PACKET_PER_FLOW = 10
 
@@ -33,15 +35,16 @@ def string_hex_to_int(hex_string):
 
 
 def main():
-    consumer_con = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
-    consumer_channel = consumer_con.channel()
-    consumer_channel.queue_declare(queue=CONSUMER_QUEUE)
+    if USE_RABBITMQ:
+        consumer_con = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+        consumer_channel = consumer_con.channel()
+        consumer_channel.queue_declare(queue=CONSUMER_QUEUE)
 
-    producer_con = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
-    producer_channel = producer_con.channel()
-    producer_channel.queue_declare(queue=PRODUCER_QUEUE)
+        producer_con = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+        producer_channel = producer_con.channel()
+        producer_channel.queue_declare(queue=PRODUCER_QUEUE)
 
-    if DEBUG:
+    if USE_MONGODB:
         # set a 5-second connection timeout    
         client = pymongo.MongoClient(CONNECTION_STRING, serverSelectionTimeoutMS=5000)
         try:
@@ -74,14 +77,13 @@ def main():
                 flows[flow_key]['data'].append(data)
                 if len(flows[flow_key]['data']) == MAX_PACKET_PER_FLOW:
                     flow_dict[flow_key] = flows[flow_key]
-                    producer_channel.basic_publish(exchange='',
-                        routing_key=PRODUCER_ROUTING_KEY,
-                        body=json.dumps(flow_dict))
-                    print(json.dumps(flow_dict))
-                    # print(message[7])
 
-                    if DEBUG:
-                        flow_dict[flow_key] = flows[flow_key]
+                    if USE_RABBITMQ:
+                        producer_channel.basic_publish(exchange='',
+                            routing_key=PRODUCER_ROUTING_KEY,
+                            body=json.dumps(flow_dict))
+
+                    if USE_MONGODB:
                         client['DEV']['flow'].insert_one(flow_dict)
                         
                     flow_dict = {}

@@ -30,11 +30,12 @@ CONSUMER_ROUTING_KEY = 'hello'
 PRODUCER_QUEUE = 'hello2'
 PRODUCER_ROUTING_KEY = 'hello2'
 
-# debug result by using mongo
-DEBUG = true
 CONNECTION_STRING = 'mongodb://localhost:27017'
 
 MAX_PACKET_PER_FLOW = 10
+
+USE_MONGODB = false
+USE_RABBITMQ = true
 
 [tensor-worker]
 RABBIT_URL = 'localhost'
