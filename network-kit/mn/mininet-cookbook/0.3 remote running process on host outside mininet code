@@ -1,0 +1,5 @@
+https://stackoverflow.com/questions/60364650/how-to-open-each-mininet-node-in-terminator
+sudo mnexec -a [PID] bash
+
+runing with different virtualenv
+https://stackoverflow.com/questions/8052926/running-subprocess-within-different-virtualenv-with-python

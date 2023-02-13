@@ -1,0 +1,15 @@
+https://evacastro.gitbooks.io/sdn/content/faucet_mininet.html
+--ofp-listen-host=
+
+ryu-manager faucet.faucet ryu.app.ofctl_rest ryu.app.simple_switch_13 --verbose --ofp-tcp-listen-port=6633
+
+sudo mn --topo=linear,3 --host=cfs,cpu=0.1,cores=1,f=1
+sudo mn --link tc,bw=10,delay=10ms
+
+iperf -c 10.0.0.2 -p 5666 -t 9999
+iperf -s -p 5666 -i 1
+
+top -b -p 1 -d 1 | grep --line-buffered \\\"^Cpu\\\"
+
+https://unix.stackexchange.com/questions/80319/tshark-command-for-finding-mac-of-a-specified-network
+http://pwet.fr/man/linux/commandes/tcprewrite/
