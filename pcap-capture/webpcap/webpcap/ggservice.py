@@ -2,7 +2,7 @@ from pageloader import PageLoader
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support.wait import WebDriverWait
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support import expected_conditions as EC
 
@@ -144,11 +144,16 @@ class GDocsPageLoader(PageLoader):
     def __init__(self, timeout=20, preferences=None, addons=None):
         super(GDocsPageLoader, self).__init__((), timeout, preferences, addons)
 
-    # def 
+    # def signin 
 
 class GPhotosPageLoader(PageLoader):
-    def __init__(self, locator, delay=3, extension=''):
-        super().__init__(locator, delay, extension)
-
+    def __init__(self, url=None, delay=3, extension=''):
+        super().__init__((By.CLASS_NAME, 'BiCYpc'), delay, extension)
+        self.load(url)
+    
     def load(self, url):
         super().load(url)
+    
+    def download(self) -> None:
+        self.driver.find_element(By.CSS_SELECTOR, "[aria-label='More options']").click()
+        self.driver.find_element(By.CSS_SELECTOR, "[aria-label='Download - Shift+D']").click()
