@@ -7,7 +7,6 @@ import json, csv
 from io import StringIO
 import tomli
 
-import tomli
 try:
     with open('config.toml', "rb") as f:
         toml_dict = tomli.load(f)
